@@ -48,7 +48,7 @@ func getChar(a []rune, i int) (string, bool) {
 	return string(a[i]), false
 }
 
-// Вернуть количество повторений текущего символа и инкремент
+// Вернуть количество повторений текущего символа и инкремент.
 func getRepeatCount(a []rune, i int) (count int, inc int) {
 	if i+1 >= len(a) {
 		return
