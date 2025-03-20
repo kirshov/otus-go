@@ -18,47 +18,57 @@ func Unpack(s string) (string, error) {
 		if isSlashed {
 			i++
 		} else {
+			// сдвиг всегда на 2 символа минимум, если пришла неэкранированная цифра - ошибка
 			if _, err := strconv.Atoi(char); err == nil {
 				return "", ErrInvalidString
 			}
 		}
 
-		var resultIteration strings.Builder
-		resultIteration.WriteString(char)
-
-		if i < length-1 {
-			next := string(sArr[i+1])
-			countInt, err := strconv.Atoi(next)
-
-			if err == nil {
-				i++
-				if countInt == 0 {
-					continue
-				}
-
-				if countInt > 0 {
-					resultIteration.WriteString(strings.Repeat(char, countInt-1))
-				}
-			}
+		count, inc := getRepeatCount(sArr, i)
+		i += inc
+		if count < 0 {
+			continue
 		}
 
-		result.WriteString(resultIteration.String())
+		result.WriteString(char)
+		if count > 0 {
+			result.WriteString(strings.Repeat(char, count))
+		}
 	}
 
 	return result.String(), nil
 }
 
+// Вернуть текущий символ, учитывая экранирование (если экранирование есть, то следующий за ним).
 func getChar(a []rune, i int) (string, bool) {
-	isSlashed := false
-	char := string(a[i])
+	if a[i] == '\\' && i+1 < len(a) {
+		return string(a[i+1]), true
+	}
 
-	if char == "\\" {
-		l := len(a)
-		if l > i+1 {
-			isSlashed = true
-			char = string(a[i+1])
+	return string(a[i]), false
+}
+
+// Вернуть количество повторений текущего символа и инкремент
+func getRepeatCount(a []rune, i int) (count int, inc int) {
+	if i+1 >= len(a) {
+		return
+	}
+
+	next := string(a[i+1])
+	countInt, err := strconv.Atoi(next)
+
+	// если ошибки нет, значит следующий символ - число
+	if err == nil {
+		if countInt == 0 {
+			inc = 1
+			count = -1
+		}
+
+		if countInt > 0 {
+			count = countInt - 1
+			inc = 1
 		}
 	}
 
-	return char, isSlashed
+	return
 }
