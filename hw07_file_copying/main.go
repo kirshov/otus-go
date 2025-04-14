@@ -2,11 +2,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 )
 
 var (
 	from, to      string
 	limit, offset int64
+	ShowProgress  = false
 )
 
 func init() {
@@ -17,6 +19,11 @@ func init() {
 }
 
 func main() {
+	ShowProgress = true
+
 	flag.Parse()
-	// Place your code here.
+	err := Copy(from, to, limit, offset)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
