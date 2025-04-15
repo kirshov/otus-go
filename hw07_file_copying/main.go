@@ -8,7 +8,6 @@ import (
 var (
 	from, to      string
 	limit, offset int64
-	ShowProgress  = false
 )
 
 func init() {
@@ -19,10 +18,8 @@ func init() {
 }
 
 func main() {
-	ShowProgress = true
-
 	flag.Parse()
-	err := Copy(from, to, limit, offset)
+	err := Copy(from, to, offset, limit)
 	if err != nil {
 		fmt.Println(err)
 	}

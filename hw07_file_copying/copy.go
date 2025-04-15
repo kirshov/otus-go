@@ -45,14 +45,13 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		}
 	}
 
-	reader := io.LimitReader(fSource, limit)
-
-	if ShowProgress {
-		err = CopyWithProgress(tTarget, reader, fInfo.Size())
-	} else {
-		_, err = io.Copy(tTarget, reader)
+	progressSize := limit
+	if fInfo.Size()-offset < limit {
+		progressSize = fInfo.Size() - offset
 	}
 
+	reader := io.LimitReader(fSource, limit)
+	err = CopyWithProgress(tTarget, reader, progressSize)
 	if err != nil {
 		return err
 	}
