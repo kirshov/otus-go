@@ -2,8 +2,11 @@ package hw09structvalidator
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type UserRole string
@@ -37,15 +40,78 @@ type (
 )
 
 func TestValidate(t *testing.T) {
+	var roleAdmin, roleGuest UserRole
+	roleAdmin = "admin"
+	roleGuest = "guest"
+
 	tests := []struct {
 		in          interface{}
 		expectedErr error
 	}{
 		{
-			// Place your code here.
+			in: User{
+				ID:     "123213",
+				Name:   "Guest",
+				Age:    15,
+				Email:  "test@",
+				Role:   roleGuest,
+				Phones: []string{"12345"},
+			},
+			expectedErr: errors.New(ValidationErrors{
+				ValidationError{Field: "ID", Err: fmt.Errorf(validateStrLenErr, 36)},
+				ValidationError{Field: "Age", Err: fmt.Errorf(validateIntMinErr, 18)},
+				ValidationError{Field: "Email", Err: errors.New(validateStrRegxErr)},
+				ValidationError{Field: "Role", Err: fmt.Errorf(validateInListErr, "admin,stuff")},
+				ValidationError{Field: "Phones", Err: fmt.Errorf(validateStrLenErr, 11)},
+			}.Error()),
 		},
-		// ...
-		// Place your code here.
+		{
+			in: User{
+				ID:     "1234567890-1234567890-1234567890-123",
+				Name:   "Guest",
+				Age:    30,
+				Email:  "test@test.test",
+				Role:   roleAdmin,
+				Phones: []string{"01234567890"},
+			},
+			expectedErr: nil,
+		},
+		{
+			in: App{
+				Version: "1.0",
+			},
+			expectedErr: errors.New(ValidationErrors{
+				ValidationError{Field: "Version", Err: fmt.Errorf(validateStrLenErr, 5)},
+			}.Error()),
+		},
+		{
+			in: App{
+				Version: "1.0.0",
+			},
+			expectedErr: nil,
+		},
+		{
+			in: Token{
+				Header:    make([]byte, 0),
+				Payload:   make([]byte, 0),
+				Signature: make([]byte, 0),
+			},
+			expectedErr: nil,
+		},
+		{
+			in: Response{
+				Code: 301,
+			},
+			expectedErr: errors.New(ValidationErrors{
+				ValidationError{Field: "Code", Err: fmt.Errorf(validateInListErr, "200,404,500")},
+			}.Error()),
+		},
+		{
+			in: Response{
+				Code: 200,
+			},
+			expectedErr: nil,
+		},
 	}
 
 	for i, tt := range tests {
@@ -53,8 +119,8 @@ func TestValidate(t *testing.T) {
 			tt := tt
 			t.Parallel()
 
-			// Place your code here.
-			_ = tt
+			err := Validate(tt.in)
+			require.Equal(t, tt.expectedErr, err)
 		})
 	}
 }
