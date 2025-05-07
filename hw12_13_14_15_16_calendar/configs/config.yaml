@@ -1,5 +1,10 @@
-[logger]
-level = "INFO"
+logger:
+  level: "INFO"
 
-# TODO
-# ...
+storage:
+  type: "psql" #memory,psql
+  timeout: 3
+
+server:
+  host: "localhost"
+  port: "8080"

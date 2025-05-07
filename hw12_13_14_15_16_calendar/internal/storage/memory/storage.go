@@ -1,14 +1,101 @@
 package memorystorage
 
-import "sync"
+import (
+	"context"
+	"fmt"
+	"sync"
+	"time"
+
+	"github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/domain"
+)
 
 type Storage struct {
-	// TODO
-	mu sync.RWMutex //nolint:unused
+	data map[string]domain.Event
+	mu   sync.RWMutex
 }
 
 func New() *Storage {
-	return &Storage{}
+	return &Storage{
+		data: make(map[string]domain.Event),
+	}
 }
 
-// TODO
+func (s *Storage) Add(ctx context.Context, event domain.Event) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, ok := s.data[event.ID]; ok {
+		return domain.EventExistsError{EventID: event.ID}
+	}
+
+	s.data[event.ID] = event
+	return nil
+}
+
+func (s *Storage) Update(ctx context.Context, event domain.Event) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, ok := s.data[event.ID]; !ok {
+		return domain.EventNotExistsError{EventID: event.ID}
+	}
+
+	s.data[event.ID] = event
+	return nil
+}
+
+func (s *Storage) Remove(ctx context.Context, id string) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, ok := s.data[id]; !ok {
+		return fmt.Errorf("event %s is not exists", id)
+	}
+
+	delete(s.data, id)
+	return nil
+}
+
+func (s *Storage) List(ctx context.Context, days int) ([]domain.Event, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	maxDate := time.Now().Add(time.Duration(days) * 24 * time.Hour)
+
+	events := make([]domain.Event, 0, len(s.data))
+	for _, v := range s.data {
+		if days > 0 {
+			if v.DateStart.After(maxDate) {
+				continue
+			}
+		}
+
+		events = append(events, v)
+	}
+
+	return events, nil
+}
