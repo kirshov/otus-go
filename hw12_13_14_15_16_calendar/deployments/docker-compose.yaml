@@ -1,1 +1,23 @@
-version: "3"
+services:
+  postgres:
+    container_name: calculator-postgres
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: '/var/lib/postgresql/data/pgdata'
+      TZ: 'Europe/Moscow'
+    volumes:
+      - dbdata:/var/lib/postgresql/data/pgdata
+    ports:
+      - 5432:5432
+    networks:
+      - calc-network
+
+networks:
+  calc-network:
+    driver: bridge
+
+volumes:
+  dbdata:

@@ -6,6 +6,9 @@ import (
 
 func loggingMiddleware(next http.Handler) http.Handler { //nolint:unused
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = w
+		_ = r
+		_ = next
 		// TODO
 	})
 }
