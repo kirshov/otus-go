@@ -2,13 +2,19 @@ package internalhttp
 
 import (
 	"net/http"
+	"strings"
 )
 
-func loggingMiddleware(next http.Handler) http.Handler { //nolint:unused
+func loggingMiddleware(app Application, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = w
-		_ = r
-		_ = next
-		// TODO
+		msg := strings.Builder{}
+		msg.WriteString(r.RemoteAddr + " ")
+		msg.WriteString(r.Method + " ")
+		msg.WriteString(r.URL.String() + " ")
+		msg.WriteString(r.Proto + " ")
+		msg.WriteString(r.Header.Get("User-Agent"))
+		app.GetLogger().Info(msg.String())
+
+		next.ServeHTTP(w, r)
 	})
 }

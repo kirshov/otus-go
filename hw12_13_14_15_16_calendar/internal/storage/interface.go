@@ -7,6 +7,7 @@ import (
 )
 
 type Storage interface {
+	GetByID(ctx context.Context, id string) (domain.Event, error)
 	Add(ctx context.Context, event domain.Event) error
 	Update(ctx context.Context, event domain.Event) error
 	Remove(ctx context.Context, id string) error

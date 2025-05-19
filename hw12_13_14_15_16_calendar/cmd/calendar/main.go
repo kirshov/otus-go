@@ -2,10 +2,15 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
+	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/app"
 	"github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/logger"
@@ -27,14 +32,27 @@ func main() {
 		return
 	}
 
+	// Logg.
 	config := NewConfig(configFile)
 	logg := logger.New(config.Logger.Level)
+	file, err := os.OpenFile(config.Logger.File, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o644)
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(file)
+	if err != nil {
+		fmt.Println(err)
+	}
+	logg.SetOutput(file)
 
-	strg := storage.GetStorage(config.Storage.Type, config.Storage.DSN)
+	// Storage.
+	strg := storage.GetStorage(config.Storage.Type, config.Storage.DSN, config.Storage.Debug)
 	calendar := app.New(logg, strg)
 	// testExecute(config, calendar, strg)
 
-	server := internalhttp.NewServer(logg, calendar)
+	server := internalhttp.NewServer(calendar)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -43,14 +61,17 @@ func main() {
 	go func() {
 		<-ctx.Done()
 
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+		defer cancel()
+
 		if err := server.Stop(ctx); err != nil {
 			logg.Error("failed to stop http server: " + err.Error())
 		}
 	}()
 
-	logg.Info("calendar is running...")
+	fmt.Println("calendar is running...")
 
-	if err := server.Start(ctx, config.Server.address); err != nil {
+	if err := server.Start(config.Server.address); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()
 		os.Exit(1) //nolint:gocritic

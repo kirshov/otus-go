@@ -15,12 +15,14 @@ type Config struct {
 
 type LoggerConf struct {
 	Level string
+	File  string
 }
 
 type StorageConf struct {
 	Type    string
 	Timeout int64
 	DSN     string
+	Debug   bool
 }
 
 type ServerConf struct {
@@ -43,11 +45,13 @@ func NewConfig(configFile string) Config {
 	return Config{
 		Logger: LoggerConf{
 			Level: viper.GetString("logger.level"),
+			File:  viper.GetString("logger.file"),
 		},
 		Storage: StorageConf{
 			Type:    viper.GetString("storage.type"),
 			Timeout: viper.GetInt64("storage.timeout"),
 			DSN:     viper.GetString("app_postgres_dsn"),
+			Debug:   viper.GetBool("storage.debug"),
 		},
 		Server: ServerConf{
 			address: viper.GetString("server.host") + ":" + viper.GetString("server.port"),
