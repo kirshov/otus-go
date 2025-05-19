@@ -20,6 +20,27 @@ func New() *Storage {
 	}
 }
 
+func (s *Storage) GetByID(ctx context.Context, id string) (domain.Event, error) {
+	var event domain.Event
+
+	select {
+	case <-ctx.Done():
+		return event, ctx.Err()
+	default:
+	}
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	for _, v := range s.data {
+		if v.ID == id {
+			return v, nil
+		}
+	}
+
+	return event, domain.EventExistsError{EventID: id}
+}
+
 func (s *Storage) Add(ctx context.Context, event domain.Event) error {
 	select {
 	case <-ctx.Done():

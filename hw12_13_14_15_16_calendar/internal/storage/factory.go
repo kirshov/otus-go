@@ -12,12 +12,12 @@ const (
 	PSQL   string = "psql"
 )
 
-func GetStorage(t, dsn string) Storage {
+func GetStorage(t, dsn string, debug bool) Storage {
 	switch t {
 	case MEMORY:
 		return memorystorage.New()
 	case PSQL:
-		return sqlstorage.New(dsn)
+		return sqlstorage.New(dsn, debug)
 	default:
 		log.Fatal("unsupported storage type")
 		return nil

@@ -1,9 +1,11 @@
 logger:
   level: "INFO"
+  file: "./runtime/log.log"
 
 storage:
   type: "psql" #memory,psql
-  timeout: 3
+  timeout: "3"
+  debug: "true"
 
 server:
   host: "localhost"
