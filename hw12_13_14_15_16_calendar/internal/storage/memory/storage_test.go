@@ -18,7 +18,8 @@ func TestStorage(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("Add", func(t *testing.T) {
-		err := storage.Add(ctx, event1)
+		id, err := storage.Add(ctx, event1)
+		require.NotEmpty(t, id)
 		require.NoError(t, err)
 
 		l, err := storage.List(ctx, 0)
@@ -35,7 +36,8 @@ func TestStorage(t *testing.T) {
 	})
 
 	t.Run("Add next", func(t *testing.T) {
-		err := storage.Add(ctx, event2)
+		id, err := storage.Add(ctx, event2)
+		require.NotEmpty(t, id)
 		require.NoError(t, err)
 		l, err := storage.List(ctx, 0)
 		require.NoError(t, err)
@@ -62,10 +64,11 @@ func TestAlreadyExists(t *testing.T) {
 	storage := New()
 	ctx := context.Background()
 
-	err := storage.Add(ctx, event)
+	id, err := storage.Add(ctx, event)
+	require.NotEmpty(t, id)
 	require.NoError(t, err)
 
-	err = storage.Add(ctx, event)
+	_, err = storage.Add(ctx, event)
 	var eventExistsErr domain.EventExistsError
 	require.ErrorAs(t, err, &eventExistsErr)
 }
@@ -76,9 +79,12 @@ func TestStorageListByDays(t *testing.T) {
 
 	storage := New()
 	ctx := context.Background()
-	err := storage.Add(ctx, event1)
+	id, err := storage.Add(ctx, event1)
+	require.NotEmpty(t, id)
 	require.NoError(t, err)
-	err = storage.Add(ctx, event2)
+
+	id, err = storage.Add(ctx, event2)
+	require.NotEmpty(t, id)
 	require.NoError(t, err)
 
 	l, err := storage.List(ctx, 0)

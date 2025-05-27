@@ -3,61 +3,49 @@ package internalhttp
 import (
 	"context"
 	"net/http"
-	"strings"
 	"time"
+
+	"github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/logger"
+	"github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/storage"
 )
+
+const handlerTimeout time.Duration = 5 * time.Second
 
 type Server struct {
 	http        *http.Server
-	logger      Logger
 	application Application
 }
 
-type Logger interface {
-	Debug(msg string)
-	Info(msg string)
-	Warning(msg string)
-	Error(msg string)
+type Application interface {
+	GetLogger() logger.Logger
+	GetStorage() storage.Storage
 }
 
-type Application interface { // TODO
-}
-
-func NewServer(logger Logger, app Application) *Server {
+func NewServer(app Application) *Server {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handler)
 
+	routes := getRoutes(app)
+	for _, route := range routes {
+		mux.HandleFunc(route.URL, route.Handler)
+	}
+
+	muxWithLogging := loggingMiddleware(app, mux)
 	return &Server{
 		http: &http.Server{
-			Handler:           mux,
-			ReadHeaderTimeout: 5 * time.Second,
+			Handler:           muxWithLogging,
+			ReadHeaderTimeout: handlerTimeout,
 		},
-		logger:      logger,
 		application: app,
 	}
 }
 
-func (s *Server) Start(ctx context.Context, address string) error {
-	<-ctx.Done()
-	_ = address
+func (s *Server) Start(address string) error {
+	s.http.Addr = address
+	s.application.GetLogger().Info("http server started")
 
-	/*s.http.Addr = address
-	return s.http.ListenAndServe()*/
-	return nil
+	return s.http.ListenAndServe()
 }
 
 func (s *Server) Stop(ctx context.Context) error {
 	return s.http.Shutdown(ctx)
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-	msg := strings.Builder{}
-	msg.WriteString(r.RemoteAddr + " ")
-	msg.WriteString(r.Method + " ")
-	msg.WriteString(r.URL.String() + " ")
-	msg.WriteString(r.Proto + " ")
-	msg.WriteString(r.Header.Get("User-Agent"))
-
-	w.Write([]byte(msg.String()))
-	// todo залогировать в middleware после соответствующего урока
 }

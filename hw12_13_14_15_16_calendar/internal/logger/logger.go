@@ -18,7 +18,14 @@ const (
 	ERROR
 )
 
-type Logger struct {
+type Logger interface {
+	Debug(msg string)
+	Info(msg string)
+	Warning(msg string)
+	Error(msg string)
+}
+
+type Logg struct {
 	out   io.Writer
 	level logLevel
 	mu    sync.Mutex
@@ -38,15 +45,15 @@ var intToLevels = map[logLevel]string{
 	ERROR:   "ERROR",
 }
 
-func New(level string) *Logger {
-	logger := &Logger{}
+func New(level string) *Logg {
+	logger := &Logg{}
 	logger.SetLevel(level)
 	logger.SetOutput(os.Stdout)
 
 	return logger
 }
 
-func (l *Logger) SetLevel(level string) {
+func (l *Logg) SetLevel(level string) {
 	curLevel, ok := levelsToInt[level]
 	if !ok {
 		log.Fatal(fmt.Errorf("invalid log level: %s", level))
@@ -55,27 +62,27 @@ func (l *Logger) SetLevel(level string) {
 	l.level = curLevel
 }
 
-func (l *Logger) SetOutput(out io.Writer) {
+func (l *Logg) SetOutput(out io.Writer) {
 	l.out = out
 }
 
-func (l *Logger) Debug(msg string) {
+func (l *Logg) Debug(msg string) {
 	l.log(DEBUG, msg)
 }
 
-func (l *Logger) Info(msg string) {
+func (l *Logg) Info(msg string) {
 	l.log(INFO, msg)
 }
 
-func (l *Logger) Warning(msg string) {
+func (l *Logg) Warning(msg string) {
 	l.log(WARNING, msg)
 }
 
-func (l *Logger) Error(msg string) {
+func (l *Logg) Error(msg string) {
 	l.log(ERROR, msg)
 }
 
-func (l *Logger) log(level logLevel, msg string) {
+func (l *Logg) log(level logLevel, msg string) {
 	if level < l.level {
 		return
 	}
@@ -83,7 +90,7 @@ func (l *Logger) log(level logLevel, msg string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	msg = fmt.Sprintf("%s %s %s", time.Now().Format(time.DateTime), intToLevels[level], msg)
+	msg = fmt.Sprintf("%s %s %s\n", time.Now().Format(time.DateTime), intToLevels[level], msg)
 
 	_, err := l.out.Write([]byte(msg))
 	if err != nil {
