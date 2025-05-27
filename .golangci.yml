@@ -21,7 +21,7 @@ issues:
         - gocyclo
         - gosec
   exclude-dirs:
-    - internal/server/grpc/pb
+    - hw12_13_14_15_16_calendar/internal/server/grpc/pb
 
 linters:
   disable-all: true
