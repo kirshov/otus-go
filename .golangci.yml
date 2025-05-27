@@ -3,8 +3,6 @@ run:
   build-tags:
     - bench
     - !bench
-  skip-dirs:
-    - internal/server/grpc/pb
 
 linters-settings:
   funlen:
@@ -22,6 +20,8 @@ issues:
         - dupl
         - gocyclo
         - gosec
+  exclude-dirs:
+    - internal/server/grpc/pb
 
 linters:
   disable-all: true
