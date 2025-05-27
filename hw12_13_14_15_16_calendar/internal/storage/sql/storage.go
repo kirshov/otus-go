@@ -36,25 +36,25 @@ func New(dsn string, debug bool) *Storage {
 	}
 }
 
-func (s *Storage) Add(ctx context.Context, event domain.Event) error {
+func (s *Storage) Add(ctx context.Context, event domain.Event) (string, error) {
 	if event.ID == "" {
 		event.ID = uuid.New().String()
 	} else {
 		e, err := s.GetByID(ctx, event.ID)
 		if err != nil && errors.Is(err, domain.EventNotExistsError{}) {
-			return err
+			return "", err
 		}
 
 		if e.ID == event.ID {
-			return domain.EventExistsError{EventID: event.ID}
+			return "", domain.EventExistsError{EventID: event.ID}
 		}
 	}
 
 	query := "INSERT INTO events VALUES (:id, :title, :date_start, :date_end, :description, :user_id, :notify_days)"
 	if _, err := s.conn.NamedExecContext(ctx, query, event); err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return event.ID, nil
 }
 
 func (s *Storage) Update(ctx context.Context, event domain.Event) error {

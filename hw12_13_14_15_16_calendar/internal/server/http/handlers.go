@@ -46,7 +46,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.Background()
 
-	if err := h.app.GetStorage().Add(ctx, event); err != nil {
+	if _, err := h.app.GetStorage().Add(ctx, event); err != nil {
 		h.app.GetLogger().Error("event add failed: %w" + err.Error())
 		sendResponse(w, h, http.StatusBadRequest, jsonResponse{
 			"status": false,

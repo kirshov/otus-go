@@ -41,10 +41,10 @@ func (s *Storage) GetByID(ctx context.Context, id string) (domain.Event, error) 
 	return event, domain.EventExistsError{EventID: id}
 }
 
-func (s *Storage) Add(ctx context.Context, event domain.Event) error {
+func (s *Storage) Add(ctx context.Context, event domain.Event) (string, error) {
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return "", ctx.Err()
 	default:
 	}
 
@@ -52,11 +52,11 @@ func (s *Storage) Add(ctx context.Context, event domain.Event) error {
 	defer s.mu.Unlock()
 
 	if _, ok := s.data[event.ID]; ok {
-		return domain.EventExistsError{EventID: event.ID}
+		return "", domain.EventExistsError{EventID: event.ID}
 	}
 
 	s.data[event.ID] = event
-	return nil
+	return event.ID, nil
 }
 
 func (s *Storage) Update(ctx context.Context, event domain.Event) error {

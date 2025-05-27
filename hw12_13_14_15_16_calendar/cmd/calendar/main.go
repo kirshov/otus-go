@@ -9,11 +9,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/app"
 	"github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/logger"
+	internalgrpc "github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/server/grpc"
 	internalhttp "github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/server/http"
 	"github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/storage"
 )
@@ -53,29 +55,45 @@ func main() {
 	// testExecute(config, calendar, strg)
 
 	server := internalhttp.NewServer(calendar)
+	grpcServer := internalgrpc.NewServer(calendar)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
+	fmt.Println("calendar is running...")
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
 	go func() {
-		<-ctx.Done()
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-
-		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+		defer wg.Done()
+		if err := server.Start(config.Server.address); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logg.Error("failed to start http server: " + err.Error())
+			cancel()
 		}
 	}()
 
-	fmt.Println("calendar is running...")
+	go func() {
+		defer wg.Done()
+		if err := grpcServer.Start(config.GrpcServer.address); err != nil {
+			logg.Error("failed to start grpc server: " + err.Error())
+			cancel()
+		}
+	}()
 
-	if err := server.Start(config.Server.address); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		logg.Error("failed to start http server: " + err.Error())
-		cancel()
-		os.Exit(1) //nolint:gocritic
+	<-ctx.Done()
+	logg.Info("stopping servers")
+
+	ctx, cancel = context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+
+	if err := server.Stop(ctx); err != nil {
+		logg.Error("failed to stop http server: " + err.Error())
 	}
+	grpcServer.Stop()
+
+	os.Exit(1) //nolint:gocritic
 }
 
 /*

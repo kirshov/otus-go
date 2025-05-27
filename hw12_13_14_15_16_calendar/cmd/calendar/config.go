@@ -8,9 +8,10 @@ import (
 )
 
 type Config struct {
-	Logger  LoggerConf
-	Storage StorageConf
-	Server  ServerConf
+	Logger     LoggerConf
+	Storage    StorageConf
+	Server     ServerConf
+	GrpcServer GrpcServerConf
 }
 
 type LoggerConf struct {
@@ -26,6 +27,10 @@ type StorageConf struct {
 }
 
 type ServerConf struct {
+	address string
+}
+
+type GrpcServerConf struct {
 	address string
 }
 
@@ -55,6 +60,9 @@ func NewConfig(configFile string) Config {
 		},
 		Server: ServerConf{
 			address: viper.GetString("server.host") + ":" + viper.GetString("server.port"),
+		},
+		GrpcServer: GrpcServerConf{
+			address: viper.GetString("grpc_server.host") + ":" + viper.GetString("grpc_server.port"),
 		},
 	}
 }

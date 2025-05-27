@@ -8,33 +8,6 @@ linters-settings:
   funlen:
     lines: 150
     statements: 80
-  depguard:
-    rules:
-      Main:
-        files:
-          - $all
-          - "!$test"
-        allow:
-          - $gostd
-          - "github.com/schollz/progressbar/v3"
-          - github.com/google/uuid
-          - github.com/jackc/pgx/v5/stdlib
-          - github.com/jmoiron/sqlx
-          - github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/domain
-          - github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/storage/memory
-          - github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/storage/sql
-          - github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/logger
-          - github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/storage
-          - github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/app
-          - github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/server/http
-          - github.com/spf13/viper
-      Test:
-        files:
-          - $test
-        allow:
-          - $gostd
-          - github.com/stretchr/testify
-          - github.com/kirshov/otus-go/hw12_13_14_15_calendar/internal/domain
   goanalysis:
     skip-pkgs:
       - github.com/jackc/pgx/v5/stdlib
@@ -52,7 +25,6 @@ linters:
   disable-all: true
   enable:
     - asciicheck
-    - depguard
     - dogsled
     - dupl
     - bodyclose

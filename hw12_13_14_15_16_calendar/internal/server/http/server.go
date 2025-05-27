@@ -41,6 +41,7 @@ func NewServer(app Application) *Server {
 
 func (s *Server) Start(address string) error {
 	s.http.Addr = address
+	s.application.GetLogger().Info("http server started")
 
 	return s.http.ListenAndServe()
 }

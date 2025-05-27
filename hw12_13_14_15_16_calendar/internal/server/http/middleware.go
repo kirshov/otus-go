@@ -8,6 +8,7 @@ import (
 func loggingMiddleware(app Application, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		msg := strings.Builder{}
+		msg.WriteString("HTTP request: ")
 		msg.WriteString(r.RemoteAddr + " ")
 		msg.WriteString(r.Method + " ")
 		msg.WriteString(r.URL.String() + " ")

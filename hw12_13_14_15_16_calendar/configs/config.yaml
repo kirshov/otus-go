@@ -10,3 +10,7 @@ storage:
 server:
   host: "localhost"
   port: "8080"
+
+grpc_server:
+  host: "localhost"
+  port: "50051"
