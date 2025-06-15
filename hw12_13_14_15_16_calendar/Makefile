@@ -1,4 +1,5 @@
 BIN := "./bin/calendar"
+BIN_SCHEDULER := "./bin/calendar_scheduler"
 DOCKER_IMG="calendar:develop"
 
 PROTO_DIR="proto"
@@ -12,8 +13,14 @@ PROTOC_INCLUDES := "$(shell go env GOPATH)\pkg\mod\github.com\protocolbuffers\pr
 build:
 	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/calendar
 
+build-scheduler:
+	go build -v -o $(BIN_SCHEDULER) -ldflags "$(LDFLAGS)" ./cmd/calendar_scheduler
+
 run: build
 	$(BIN) -config ./configs/config.yaml
+
+run-scheduler: build-scheduler
+	$(BIN_SCHEDULER) -config ./configs/scheduler.yaml
 
 build-img:
 	docker build \
